@@ -5,7 +5,7 @@
 #include<stdio.h>
 #include<math.h>
 #include<string.h>
-#include"portaudio.h"
+#include<portaudio.h>
 #include"sinebig.h"
 
 //initial constants
