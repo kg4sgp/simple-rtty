@@ -15,7 +15,7 @@ int position = 0;
 int sgn = 1;
 int count = 0;
 char bitpos = 0;
-unsigned long frames = 64;
+unsigned long frames = 512;
 
 short int buffer;
 char readbuff;
@@ -55,16 +55,19 @@ static int paCall(const void *inputBuffer,
     int i;
     for (i = 0; i < frames; i++) {
 
+        // if we need to read more data from the file, do so
 	if (bitpos > 7) {
 	    bitpos = 0;
 	    if (!feof(fin)) {
 		fread(&readbuff, sizeof(readbuff), 1, fin);
 	    } else if (feof(fin)) {
-		printf("Reached EOF...\n");
+		printf("Reached End Of File...\n");
 		return paComplete;
 	    }
 	}
 
+        // if we have sent the current symbol long enough to achieve the
+        // baudrate we want, get the next symbol (the next bit)
 	if (count > sampPerSym) {
 	    count = 0;
 	    bitpos++;
@@ -76,12 +79,17 @@ static int paCall(const void *inputBuffer,
 	    }
 	}
 
+        // change the position in the sine table according to the frequency
 	position = position + change;
 
+        // if we fall off the table take the remander and use that as
+        // our location
 	if (position >= tableEntries) {
-	    position = position - tableEntries;
+	    position = position%tableEntries;
 	    sgn = sgn * (-1);
 	}
+
+        // write the audio
 
 	data->left = (short int) sine[position] * sgn;
 	data->right = (short int) sine[position] * sgn;
@@ -101,9 +109,9 @@ static int paCall(const void *inputBuffer,
 
 int main(int argc, char *argv[]) {
 
-    //compute samples per symbol, and deltas for different frequencies
     PaStreamParameters outputParameters;
 
+    // check to see if piping
     if (strcmp(argv[1], "-") == 0) {
 	fin = stdin;
     } else if ((fin = fopen(argv[1], "rb")) == NULL) {
@@ -118,21 +126,25 @@ int main(int argc, char *argv[]) {
 	return;
     }
 
-
+    // if pipeing flush buffers
     if (fin == stdin)
 	fflush(stdin);
     if (fout == stdout)
 	fflush(stdout);
 
+    // intialize portaudio
     err = Pa_Initialize();
     if (err != paNoError)
 	goto error;
 
+    // open output device
     outputParameters.device = Pa_GetDefaultOutputDevice();
     if (outputParameters.device == paNoDevice) {
 	fprintf(stderr, "Error: No default output device.\n");
 	goto error;
     }
+
+    // set audio paramaters
     outputParameters.channelCount = 2;
     outputParameters.sampleFormat = paInt16;
     outputParameters.suggestedLatency =
@@ -153,7 +165,6 @@ int main(int argc, char *argv[]) {
     if (err != paNoError)
 	goto error;
 
-
     while ((err = Pa_IsStreamActive(stream)) == 1) {
 	Pa_Sleep(500);
     }
@@ -172,6 +183,8 @@ int main(int argc, char *argv[]) {
     fclose(fin);
     return err;
 
+  // yes a goto statment, from what I've read its ok for error handeling in C
+  // and it was how port audio suggested so until I learn more, I'll go with it
   error:
     Pa_Terminate();
     fprintf(stderr, "An error occured while using the portaudio stream\n");
