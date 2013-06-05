@@ -1,7 +1,3 @@
-// Jimmy Carter - KG4SGP 
-//Need to do:
-//   -Filter the output? ... maybe?
-
 #include <stdio.h>
 #include <math.h>
 #include <string.h>

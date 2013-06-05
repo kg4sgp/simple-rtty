@@ -1,7 +1,7 @@
 // Produces an RTTY bit stream for an FSK modulator
 
 #include <stdio.h>
-#include "pwm.h"
+#include "baudot.h"
 
 int main(int argc[], char *argv[]) {
 
@@ -29,34 +29,40 @@ int main(int argc[], char *argv[]) {
 
     char readbuff, writebuff, shiftToNum = 0;
     int i = 0;
-    int baudout_length = sizeof(baudout) / sizeof(char);
+    int baudot_length = sizeof(baudot) / sizeof(char);
+
+    // sync the receiver
+    writebuff = 0x3;
+    for(i = 0; i < 8; i++) {
+      fwrite(&writebuff, sizeof(char), 1, fout);
+    }
 
     while (!feof(fin)) {
 	fread(&readbuff, sizeof(readbuff), 1, fin);
 
 	// match
-	for (i = 0; i < baudout_length; i++) {
-	    if (readbuff == baudout_letters[i]) {
+	for (i = 0; i < baudot_length; i++) {
+	    if (readbuff == baudot_letters[i]) {
 		if (shiftToNum == 1) {
 		    shiftToNum = 0;
-		    writebuff = baudout[31];
+		    writebuff = baudot[31];
 		    writebuff = (writebuff << 2) + 3;
 		    fwrite(&writebuff, sizeof(char), 1, fout);
 		}
-		writebuff = baudout[i];
+		writebuff = baudot[i];
 		writebuff = (writebuff << 2) + 3;
 		fwrite(&writebuff, sizeof(char), 1, fout);
 	    }
 
 	    if (readbuff != ' ' && readbuff != 10
-		&& readbuff == baudout_figures[i]) {
+		&& readbuff == baudot_figures[i]) {
 		if (shiftToNum == 0) {
 		    shiftToNum = 1;
-		    writebuff = baudout[30];
+		    writebuff = baudot[30];
 		    writebuff = (writebuff << 2) + 3;
 		    fwrite(&writebuff, sizeof(char), 1, fout);
 		}
-		writebuff = baudout[i];
+		writebuff = baudot[i];
 		writebuff = (writebuff << 2) + 3;
 		fwrite(&writebuff, sizeof(char), 1, fout);
 	    }

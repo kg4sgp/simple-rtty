@@ -1,6 +1,6 @@
 // some lookup tables
 
-unsigned char baudout_figures[] = {
+unsigned char baudot_figures[] = {
 0x00,
 ' ',
 '1',
@@ -33,7 +33,7 @@ unsigned char baudout_figures[] = {
 10, // LF
 };
 
-unsigned char baudout_letters[] = {
+unsigned char baudot_letters[] = {
 0x00,
 ' ',
 'Q', // 1
@@ -67,7 +67,7 @@ unsigned char baudout_letters[] = {
 };
 
 
-unsigned char baudout[] = {
+unsigned char baudot[] = {
 0x0,
 0x4,
 0x1d,
