@@ -132,6 +132,12 @@ int main(int argc, char *argv[]) {
     if (fout == stdout)
 	fflush(stdout);
 
+    // audio writing triggers on getting to the end of buffers
+    // put positions at the end so they trip right away.
+    bitpos = 8;
+    int sampPerSymb = (int) (sampleRate/baud);
+    count = sampPerSymb + 1;
+
     // intialize portaudio
     err = Pa_Initialize();
     if (err != paNoError)
